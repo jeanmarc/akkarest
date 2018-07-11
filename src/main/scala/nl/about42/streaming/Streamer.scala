@@ -6,7 +6,7 @@ import java.nio.file.Path
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{FileIO, Sink, Source}
+import akka.stream.scaladsl.{FileIO, Sink, Source, StreamConverters}
 
 import scala.io.StdIn
 
@@ -30,6 +30,11 @@ object Streamer extends App {
   }))
   println(s"done (${count})")
 
-  system.terminate()
+
+  val s2 = StreamConverters.fromInputStream(() => System.in)
+
+  s2.runWith(Sink.foreach({ w => println(s"stdin: ${w}")}))
+
+  //system.terminate()
   println(s"done2 (${count})")
 }
