@@ -6,7 +6,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import nl.about42.http.filter.Monitoring._
+import nl.about42.http.directive.Monitoring._
 
 import scala.io.StdIn
 
@@ -25,7 +25,7 @@ object Server {
       }
     }
 
-    val monitoredRoute = monitorTotal("test") {
+    val monitoredRoute = monitored {
       route
     }
 
