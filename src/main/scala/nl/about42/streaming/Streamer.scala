@@ -5,7 +5,8 @@ import java.nio.file.Path
 
 import akka.NotUsed
 import akka.actor.ActorSystem
-import akka.stream.ActorMaterializer
+import akka.event.Logging
+import akka.stream.{ActorMaterializer, Attributes}
 import akka.stream.scaladsl.{FileIO, Flow, Sink, Source, StreamConverters}
 import akka.util.ByteString
 
@@ -19,17 +20,14 @@ object Streamer extends App {
 
   implicit val mat = ActorMaterializer() // created from `system`
 
-  val s2 = StreamConverters.fromInputStream(() => System.in)
+  val s2 = StreamConverters.fromInputStream(() => System.in).log("stdin").withAttributes(Attributes.logLevels(onElement = Logging.InfoLevel, onFinish = Logging.InfoLevel))
 
   // flow that looks for the word 'quit' and then completes. Passes input through in all other cases
-  val quitWatcher: Flow[ByteString, ByteString, NotUsed] = Flow[ByteString].takeWhile( w => w.decodeString("UTF-8") match {
-    case "quit\n" => {println("detected quit"); false}
-    case x => {println(s"detected some input: $x"); true}
-  })
+  val quitWatcher = Flow[ByteString].takeWhile( w => ! "quit\n".equals(w.utf8String))
 
-  val combined = s2.via(quitWatcher)
+  val combined = s2.via(quitWatcher).log("after-quitWatcher").withAttributes(Attributes.logLevels(onElement = Logging.InfoLevel, onFinish = Logging.InfoLevel))
 
-  val stdoutReporter = Sink.foreach({ w: ByteString => println(s"stdin: ${w.decodeString("UTF-8")}")})
+  val stdoutReporter = Sink.foreach({ w: ByteString => println(s"stdout: ${w.utf8String}")})
 
   //val finish = s2.runWith(stdoutReporter)
   val finish = combined.runWith(stdoutReporter)
@@ -37,7 +35,9 @@ object Streamer extends App {
   implicit val executionContext = system.dispatcher
 
   finish.onComplete( _ => {
+    println("stopping the application")
     system.terminate()
+    println("after terminate")
   })
 
 }
