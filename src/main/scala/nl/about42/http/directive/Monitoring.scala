@@ -12,20 +12,22 @@ object Monitoring {
   private def timeRequest(ctx: RequestContext): Try[RouteResult] => Unit = {
     val start = System.nanoTime()
 
-    {
+    handleResult(start, ctx)
+  }
+
+  private def handleResult(start: Long, ctx: RequestContext)(result: Try[RouteResult]): Unit = {
+    val duration = (System.nanoTime() - start) / 1000000.0
+
+    result match {
       case Success(Complete(resp)) =>
-        val d = System.nanoTime() - start
-        println(s"[${resp.status.intValue()}] ${ctx.request.method.name} " +
-          s"${ctx.request.uri} took: ${d}ns")
+        println(s"[${resp.status.intValue()}] ${ctx.request.method.name} ${ctx.request.uri} took: ${duration}ms")
       case Success(Rejected(_)) =>
-        val d = System.nanoTime() - start
-        println(s"Rejected ${ctx.request.method.name} " +
-          s"${ctx.request.uri} took: ${d}ns")
+        println(s"Rjctd ${ctx.request.method.name} ${ctx.request.uri} took: ${duration}ms")
       case Failure(_)           =>
-        val d = System.nanoTime() - start
-        println(s"Failed ${ctx.request.method.name} " +
-          s"${ctx.request.uri} took: ${d}ns")
+        println(s"Faild ${ctx.request.method.name} ${ctx.request.uri} took: ${duration}ms")
+
     }
+
   }
 
 
