@@ -5,10 +5,14 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
+import akka.pattern.ask
 import akka.stream.ActorMaterializer
+import akka.util.Timeout
 import nl.about42.http.directive.Monitoring._
 import nl.about42.http.stats.Monitor
+import nl.about42.http.stats.Monitor.Report
 
+import scala.concurrent.duration._
 import scala.io.StdIn
 
 object Server {
@@ -17,6 +21,7 @@ object Server {
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
 
+    implicit val timeout: Timeout = 1 second
     val hostname = "localhost"
     val port = 8080
 
@@ -29,6 +34,12 @@ object Server {
     } ~ path("world") {
       get {
         complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Hello world</h1"))
+      }
+    } ~ path("stats") {
+      get {
+        complete {
+          (monitorActor ? Report("test")).mapTo[String]
+        }
       }
     }
 

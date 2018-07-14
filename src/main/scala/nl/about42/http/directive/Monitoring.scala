@@ -19,7 +19,7 @@ object Monitoring {
 
   private def collectStats(name: String, actor: ActorRef, start: Long, ctx: RequestContext)(result: Try[RouteResult]): Unit = {
     val duration = System.nanoTime() - start
-    val request = ctx.request.method.toString() + ":" + ctx.request.uri.toString()
+    val request = ctx.request.method.value + " " + ctx.request.uri.toString()
     val status = result match {
       case Success(Complete(resp)) => SUCCESS
       case Success(Rejected(_))    => REJECTION
