@@ -2,7 +2,7 @@ import sbt._
 
 object Dependencies {
   val akkaHttpVersion = "10.1.3"
-  val akkaVersion     = "2.5.13"
+  val akkaVersion     = "2.5.14"
 
   lazy val akkaDependencies = Seq(
     "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,

@@ -1,12 +1,13 @@
 package nl.about42.http
 
-import akka.actor.ActorSystem
+import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
 import nl.about42.http.directive.Monitoring._
+import nl.about42.http.stats.Monitor
 
 import scala.io.StdIn
 
@@ -19,13 +20,19 @@ object Server {
     val hostname = "localhost"
     val port = 8080
 
+    val monitorActor = system.actorOf(Props[Monitor], "monitoringActor")
+
     val route: Route = path("hello") {
       get {
         complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Hi there</h1"))
       }
+    } ~ path("world") {
+      get {
+        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Hello world</h1"))
+      }
     }
 
-    val monitoredRoute = monitored {
+    val monitoredRoute = monitoredWithActor("test", monitorActor) {
       route
     }
 
