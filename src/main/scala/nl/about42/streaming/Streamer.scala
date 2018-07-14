@@ -6,7 +6,8 @@ import java.nio.file.Path
 import akka.NotUsed
 import akka.actor.ActorSystem
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{FileIO, Sink, Source, StreamConverters}
+import akka.stream.scaladsl.{FileIO, Flow, Sink, Source, StreamConverters}
+import akka.util.ByteString
 
 import scala.io.StdIn
 
@@ -18,23 +19,25 @@ object Streamer extends App {
 
   implicit val mat = ActorMaterializer() // created from `system`
 
-  var count = 0
-  val inputValues = List("Hello", "world")
-
-  val source: Source[String, NotUsed] = Source(inputValues)
-
-  println("start")
-  source.runWith(Sink.foreach({ w =>
-    count += 1
-    println(w)
-  }))
-  println(s"done (${count})")
-
-
   val s2 = StreamConverters.fromInputStream(() => System.in)
 
-  s2.runWith(Sink.foreach({ w => println(s"stdin: ${w}")}))
+  // flow that looks for the word 'quit' and then completes. Passes input through in all other cases
+  val quitWatcher: Flow[ByteString, ByteString, NotUsed] = Flow[ByteString].takeWhile( w => w.decodeString("UTF-8") match {
+    case "quit\n" => {println("detected quit"); false}
+    case x => {println(s"detected some input: $x"); true}
+  })
 
-  //system.terminate()
-  println(s"done2 (${count})")
+  val combined = s2.via(quitWatcher)
+
+  val stdoutReporter = Sink.foreach({ w: ByteString => println(s"stdin: ${w.decodeString("UTF-8")}")})
+
+  //val finish = s2.runWith(stdoutReporter)
+  val finish = combined.runWith(stdoutReporter)
+
+  implicit val executionContext = system.dispatcher
+
+  finish.onComplete( _ => {
+    system.terminate()
+  })
+
 }
