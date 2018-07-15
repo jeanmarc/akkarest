@@ -20,7 +20,7 @@ object WrapperDirectives {
     *                  `Try[RouteResult => Unit]`) is applied to when the
     *                  request completes either successfully or fails.
     */
-  def aroundRequest[T](onRequest: RequestContext => Try[RouteResult] => Unit): Directive0 = {
+  def aroundRequest[T](onRequest: RequestContext => Try[RouteResult] => Unit, ec: ExecutionContext): Directive0 = {
 
     extractRequestContext.flatMap { ctx =>
       val onDone = onRequest(ctx)
@@ -36,8 +36,7 @@ object WrapperDirectives {
             } else {
               entity.transformDataBytes(Flow[ByteString].watchTermination() {
                 case (m, f) =>
-                  // or another, custom EC
-                  import scala.concurrent.ExecutionContext.Implicits.global
+                  implicit val executionContext = ec
                   f.map(_ => c).onComplete(onDone)
                   m
               })

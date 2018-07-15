@@ -43,7 +43,7 @@ object Server {
       }
     }
 
-    val monitoredRoute = monitoredWithActor("test", monitorActor) {
+    val monitoredRoute = monitoredWithActor("test", monitorActor, system.dispatcher) {
       route
     }
 
