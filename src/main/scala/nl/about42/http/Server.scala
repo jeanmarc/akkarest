@@ -3,14 +3,15 @@ package nl.about42.http
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
+import akka.http.scaladsl.model.headers.RawHeader
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.pattern.ask
 import akka.stream.ActorMaterializer
 import akka.util.Timeout
 import nl.about42.http.directive.Monitoring._
-import nl.about42.http.stats.Monitor
-import nl.about42.http.stats.Monitor.Report
+import nl.about42.http.stats.MonitorActor
+import nl.about42.http.stats.MonitorActor.Report
 
 import scala.concurrent.duration._
 import scala.io.StdIn
@@ -25,7 +26,7 @@ object Server {
     val hostname = "localhost"
     val port = 8080
 
-    val monitorActor = system.actorOf(Props[Monitor], "monitoringActor")
+    val monitorActor = system.actorOf(Props[MonitorActor], "monitoringActor")
 
     val route: Route = path("hello") {
       get {
@@ -38,7 +39,7 @@ object Server {
     } ~ path("stats") {
       get {
         complete {
-          (monitorActor ? Report("test")).mapTo[String]
+          (monitorActor ? Report("test")).mapTo[String].map( s => HttpResponse(entity = HttpEntity(ContentTypes.`application/json`, s)))
         }
       }
     }

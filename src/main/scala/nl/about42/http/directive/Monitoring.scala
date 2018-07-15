@@ -3,7 +3,7 @@ package nl.about42.http.directive
 import akka.actor.ActorRef
 import akka.http.scaladsl.server.{Directive0, RequestContext, RouteResult}
 import akka.http.scaladsl.server.RouteResult.{Complete, Rejected}
-import nl.about42.http.stats.Monitor._
+import nl.about42.http.stats.MonitorActor._
 
 import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}

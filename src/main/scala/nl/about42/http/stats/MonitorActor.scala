@@ -1,10 +1,10 @@
 package nl.about42.http.stats
 
 import akka.actor.Actor
-import nl.about42.http.stats.Monitor._
+import nl.about42.http.stats.MonitorActor._
 
 
-object Monitor {
+object MonitorActor {
   trait Command
   case class AddStat( key: Key, data: Data) extends Command
   case class Report( name: String) extends Command
@@ -21,7 +21,7 @@ object Monitor {
 
 }
 
-class Monitor extends Actor {
+class MonitorActor extends Actor {
 
   private def myState(myMap: Map[Key, Data]): Receive = {
     case AddStat(k, d) =>
