@@ -22,7 +22,7 @@ object Server {
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
 
-    implicit val timeout: Timeout = 1 second
+    implicit val timeout: Timeout = 1.second
     val hostname = "localhost"
     val port = 8080
 
@@ -41,7 +41,7 @@ object Server {
         }
       }
 
-    val monitoredRoute = monitoredWithActor("test", monitorActor, system.dispatcher) {
+    val monitoredRoute = monitoredWithActor("test", monitorActor) {
       route
     }
 
