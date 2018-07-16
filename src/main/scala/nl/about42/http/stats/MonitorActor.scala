@@ -40,7 +40,7 @@ class MonitorActor extends Actor {
     val prefix = """{"stats":["""
     val suffix = """]}"""
     val items = map.map( item => {
-      val avg: Double = if (item._2.count == 0) 0 else item._2.durationInNanos / item._2.count
+      val avg: Long = if (item._2.count == 0) 0 else item._2.durationInNanos / item._2.count
       s"""{"key":"${keyString(item._1)}","count": ${item._2.count},"totalTime":${item._2.durationInNanos},"average":${avg}}"""
     }).mkString(",")
     prefix + items + suffix
