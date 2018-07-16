@@ -28,21 +28,18 @@ object Server {
 
     val monitorActor = system.actorOf(Props[MonitorActor], "monitoringActor")
 
-    val route: Route = path("hello") {
-      get {
+    val route: Route =
+      (get & path("hello")) {
         complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Hi there</h1"))
-      }
-    } ~ path("world") {
-      get {
+      } ~
+      (get & path("world")) {
         complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Hello world</h1"))
-      }
-    } ~ path("stats") {
-      get {
+      } ~
+      (get & path("stats")) {
         complete {
-          (monitorActor ? Report("test")).mapTo[String].map( s => HttpResponse(entity = HttpEntity(ContentTypes.`application/json`, s)))
+          (monitorActor ? Report("test")).mapTo[String].map(s => HttpResponse(entity = HttpEntity(ContentTypes.`application/json`, s)))
         }
       }
-    }
 
     val monitoredRoute = monitoredWithActor("test", monitorActor, system.dispatcher) {
       route
