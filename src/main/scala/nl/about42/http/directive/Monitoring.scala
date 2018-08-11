@@ -19,6 +19,7 @@ object Monitoring {
   }
 
   private def collectStats(name: String, actor: ActorRef, start: Long, ctx: RequestContext)(result: Try[RouteResult]): Unit = {
+    println(ctx)
     val duration = System.nanoTime() - start
     val request = ctx.request.method.value + " " + ctx.request.uri.toString()
     val status = result match {
