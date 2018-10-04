@@ -22,26 +22,38 @@ object Server {
     implicit val materializer = ActorMaterializer()
     implicit val executionContext = system.dispatcher
 
-    implicit val timeout: Timeout = 1 second
+    implicit val timeout: Timeout = 1.second
     val hostname = "localhost"
     val port = 8080
 
     val monitorActor = system.actorOf(Props[MonitorActor], "monitoringActor")
 
+    def transformToPostRequest(req: HttpRequest): HttpRequest = req.copy(method = HttpMethods.POST)
+
     val route: Route =
       (get & path("hello")) {
-        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Hi there</h1"))
+        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Hi there</h1>"))
       } ~
       (get & path("world")) {
-        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Hello world</h1"))
+        complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Hello world</h1>"))
       } ~
       (get & path("stats")) {
         complete {
           (monitorActor ? Report("test")).mapTo[String].map(s => HttpResponse(entity = HttpEntity(ContentTypes.`application/json`, s)))
         }
+      } ~
+      (get & path("modified")) {
+        mapRequest(transformToPostRequest) {
+          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Did you post?</h1>"))
+        }
+      } ~
+      (get & path("mod2")) {
+        mapRequestContext(_.withRequest(HttpRequest(HttpMethods.POST))) {
+          complete(HttpEntity(ContentTypes.`text/html(UTF-8)`, "<h1>Did you post?</h1>"))
+        }
       }
 
-    val monitoredRoute = monitoredWithActor("test", monitorActor, system.dispatcher) {
+    val monitoredRoute = monitoredWithActor("test", monitorActor) {
       route
     }
 

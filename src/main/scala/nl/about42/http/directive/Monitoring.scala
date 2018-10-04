@@ -10,7 +10,7 @@ import scala.util.{Failure, Success, Try}
 
 object Monitoring {
 
-  def monitoredWithActor(name: String, actor: ActorRef, ec: ExecutionContext): Directive0 = WrapperDirectives.aroundRequest(monitorRequest(name, actor), ec)
+  def monitoredWithActor(name: String, actor: ActorRef): Directive0 = WrapperDirectives.aroundRequest(monitorRequest(name, actor))
 
   private def monitorRequest(name: String, actor: ActorRef)(ctx: RequestContext): Try[RouteResult] => Unit = {
     val start = System.nanoTime()
@@ -19,6 +19,7 @@ object Monitoring {
   }
 
   private def collectStats(name: String, actor: ActorRef, start: Long, ctx: RequestContext)(result: Try[RouteResult]): Unit = {
+    println(ctx)
     val duration = System.nanoTime() - start
     val request = ctx.request.method.value + " " + ctx.request.uri.toString()
     val status = result match {

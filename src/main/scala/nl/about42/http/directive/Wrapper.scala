@@ -6,7 +6,6 @@ import akka.http.scaladsl.server.RouteResult.{Complete, Rejected}
 import akka.stream.scaladsl.Flow
 import akka.util.ByteString
 
-import scala.concurrent.ExecutionContext
 import scala.util.{Success, Try}
 
 /**
@@ -20,7 +19,7 @@ object WrapperDirectives {
     *                  `Try[RouteResult => Unit]`) is applied to when the
     *                  request completes either successfully or fails.
     */
-  def aroundRequest[T](onRequest: RequestContext => Try[RouteResult] => Unit, ec: ExecutionContext): Directive0 = {
+  def aroundRequest[T](onRequest: RequestContext => Try[RouteResult] => Unit): Directive0 = {
 
     extractRequestContext.flatMap { ctx =>
       val onDone = onRequest(ctx)
@@ -36,7 +35,7 @@ object WrapperDirectives {
             } else {
               entity.transformDataBytes(Flow[ByteString].watchTermination() {
                 case (m, f) =>
-                  implicit val executionContext = ec
+                  implicit val executionContext = ctx.executionContext
                   f.map(_ => c).onComplete(onDone)
                   m
               })

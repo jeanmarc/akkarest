@@ -20,12 +20,12 @@ object Streamer extends App {
 
   implicit val mat = ActorMaterializer() // created from `system`
 
-  val s2 = StreamConverters.fromInputStream(() => System.in).log("stdin").withAttributes(Attributes.logLevels(onElement = Logging.InfoLevel, onFinish = Logging.InfoLevel))
+  val s2 = StreamConverters.fromInputStream(() => System.in).log("stdin").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel, onFinish = Logging.InfoLevel))
 
   // flow that looks for the word 'quit' and then completes. Passes input through in all other cases
   val quitWatcher = Flow[ByteString].takeWhile( w => ! "quit\n".equals(w.utf8String))
 
-  val combined = s2.via(quitWatcher).log("after-quitWatcher").withAttributes(Attributes.logLevels(onElement = Logging.InfoLevel, onFinish = Logging.InfoLevel))
+  val combined = s2.via(quitWatcher).log("after-quitWatcher").withAttributes(Attributes.logLevels(onElement = Logging.DebugLevel, onFinish = Logging.InfoLevel))
 
   val stdoutReporter = Sink.foreach({ w: ByteString => println(s"stdout: ${w.utf8String}")})
 
